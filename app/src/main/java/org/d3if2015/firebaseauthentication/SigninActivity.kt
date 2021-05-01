@@ -28,7 +28,20 @@ class SigninActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
-        private fun signIn() {
+
+    override fun onStart() {
+        super.onStart()
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    private fun signIn() {
         val email = binding.emailLogin.text.toString()
         val password = binding.passwordLogin.text.toString()
         when {
