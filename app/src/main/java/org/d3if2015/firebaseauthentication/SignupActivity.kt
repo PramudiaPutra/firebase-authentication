@@ -4,10 +4,9 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import org.d3if2015.firebaseauthentication.databinding.ActivitySignupBinding
@@ -29,10 +28,16 @@ class SignupActivity : AppCompatActivity() {
     }
 
     private fun signUp() {
+        val username = binding.usernameRegister.text.toString()
         val email = binding.emailRegister.text.toString()
         val password = binding.passwordRegister.text.toString()
 
         when {
+
+            TextUtils.isEmpty(username) -> {
+                Toast.makeText(this, "username is empty", Toast.LENGTH_SHORT).show()
+            }
+
             TextUtils.isEmpty(email) -> {
                 Toast.makeText(this, "email is empty", Toast.LENGTH_SHORT).show()
             }
@@ -41,22 +46,40 @@ class SignupActivity : AppCompatActivity() {
                 Toast.makeText(this, "password is empty", Toast.LENGTH_SHORT).show()
             }
             else -> {
-                createAccount(email, password)
+                createAccount(username, email, password)
             }
         }
     }
 
-    private fun createAccount(email: String, password: String) {
+    private fun createAccount(username: String, email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(this, "registration complete, please login with your email and password", Toast.LENGTH_LONG).show()
+                    val currentUser = auth.currentUser
+                    val addUsername =
+                        UserProfileChangeRequest.Builder().setDisplayName(username).build()
+                    currentUser?.updateProfile(addUsername)?.addOnCompleteListener {
 
-                    val intent = Intent(this, SigninActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        if (it.isSuccessful) {
+                            Toast.makeText(
+                                this,
+                                "registration complete, please login with your email and password",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            auth.signOut()
+
+                            val intent = Intent(this, SigninActivity::class.java).apply {
+                                flags =
+                                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            Toast.makeText(this, task.exception?.message, Toast.LENGTH_LONG).show()
+
+                        }
                     }
-                    startActivity(intent)
-                    finish()
+
                 } else {
                     Toast.makeText(this, task.exception?.message, Toast.LENGTH_LONG).show()
                 }

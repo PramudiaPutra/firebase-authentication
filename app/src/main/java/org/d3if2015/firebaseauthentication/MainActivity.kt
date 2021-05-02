@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         val currentUser = auth.currentUser
 
         if (currentUser != null) {
+            binding.userName.text = currentUser.uid
             binding.userEmail.text = currentUser.email
         }
 
